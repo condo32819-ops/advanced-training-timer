@@ -43,7 +43,7 @@ label{font-size:4.8vw}
 <div class="seg"><button id="mbeep">Beeps</button><button id="msong">My song</button></div>
 <div id="songname">No song chosen (beeps will play)</div>
 <div class="row"><button class="small" id="choose">🎵 Choose song</button><button class="small" id="preview">▶ Preview</button></div>
-<input type="file" id="file" accept="audio/*" style="display:none">
+<input type="file" id="file" style="display:none">
 <button class="small" id="testsnd" style="background:#2962ff">🔊 Test sound</button>
 <label><input type="checkbox" id="cd" checked style="transform:scale(1.8);margin-right:3vw">3-2-1 warning beeps</label></div>
 <script>
@@ -74,7 +74,7 @@ function unlockAll(){
 function db(){return new Promise((res,rej)=>{const r=indexedDB.open('att',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function saveSong(f){const d=await db();await new Promise((res,rej)=>{const t=d.transaction('s','readwrite');t.objectStore('s').put({blob:f,name:f.name},'song');t.oncomplete=res;t.onerror=()=>rej(t.error)})}
 async function loadSong(){try{const d=await db();const v=await new Promise(res=>{const r=d.transaction('s').objectStore('s').get('song');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)});if(v&&v.blob)setSong(v.blob,v.name)}catch(e){}}
-function setSong(blob,name){if(songUrl)URL.revokeObjectURL(songUrl);songUrl=URL.createObjectURL(blob);songEl=new Audio(songUrl);songEl.preload='auto';songEl.setAttribute('playsinline','');$('songname').textContent='🎵 '+(name||'Song');draw()}
+function setSong(blob,name){if(songUrl)URL.revokeObjectURL(songUrl);songUrl=URL.createObjectURL(blob);songEl=new Audio(songUrl);songEl.preload='auto';songEl.onerror=()=>{$('songname').textContent='⚠️ Can\'t play "'+(name||'file')+'" — pick an audio file';};songEl.setAttribute('playsinline','');$('songname').textContent='🎵 '+(name||'Song');draw()}
 $('choose').onclick=()=>{unlockAll();$('file').click()};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;setSong(f,f.name);mode='song';save();try{await saveSong(f)}catch(e){}draw();e.target.value=''};
 $('preview').onclick=()=>{unlockAll();if(mode==='song'&&songEl)playSong();else play('set')};
